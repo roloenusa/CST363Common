@@ -15,10 +15,12 @@ CREATE TABLE `item_types` (
 
 CREATE TABLE `items` (
 	item_id			INT			 			PRIMARY KEY 	AUTO_INCREMENT,
-    type_id			INT						NOT NULL 			REFERENCES item_types(type_id),
+    type_id			INT						NOT NULL,
 	`name`				VARCHAR(30)	NOT NULL			UNIQUE,
     `description`	VARCHAR(200), 
-	cost					INT 						NOT NULL		DEFAULT 0
+	cost					INT 						NOT NULL		DEFAULT 0,
+
+    CONSTRAINT item_fk_item_types FOREIGN KEY (type_id) REFERENCES item_types(type_id)
 );
 
 CREATE TABLE `quest_types` (
@@ -28,27 +30,33 @@ CREATE TABLE `quest_types` (
 
 CREATE TABLE `quests` (
 	quest_id			INT			 			PRIMARY KEY 	AUTO_INCREMENT,
-    type_id			INT						NOT NULL 			REFERENCES item_types(type_id),
+    type_id			INT						NOT NULL,
 	`title`				VARCHAR(100)	NOT NULL			UNIQUE,
     `description`	VARCHAR(200), 
 	reward				INT 						NOT NULL		DEFAULT 0,
-    xp					INT 						NOT NULL		DEFAULT 0
+    xp					INT 						NOT NULL		DEFAULT 0,
+    
+    CONSTRAINT quests_fk_quest_types FOREIGN KEY (type_id) REFERENCES quest_types(type_id)
 );
 
 CREATE TABLE `characters` (
 	character_id	INT						PRIMARY KEY	AUTO_INCREMENT,
-	player_id			INT						NOT NULL			REFERENCES player(player_id),
-    class_id			INT						NOT NULL 			REFERENCES classes(class_id),
+    class_id			INT						NOT NULL,
 	`name`				VARCHAR(30)	NOT NULL			UNIQUE,
     `level`				INT 						NOT NULL			DEFAULT 0,
     `experience`	INT 						NOT NULL			DEFAULT 0,
-	gold					INT						NOT NULL			DEFAULT 0
+	gold					INT						NOT NULL			DEFAULT 0,
+    
+    CONSTRAINT character_fk_classes FOREIGN KEY (class_id) REFERENCES classes(class_id)
 );
 
 CREATE TABLE `inventory` (
-	item_id			INT						NOT NULL			REFERENCES items(item_id),
-    character_id	INT						NOT NULL			REFERENCES characters(character_id),
+	item_id			INT						NOT NULL,
+    character_id	INT						NOT NULL,
 	quantity			int						DEFAULT 0,
+    
+	CONSTRAINT inventory_fk_items FOREIGN KEY (item_id) REFERENCES items(item_id),
+    CONSTRAINT inventory_fk_characters FOREIGN KEY (character_id) REFERENCES characters(character_id),
     CONSTRAINT item_character_uq UNIQUE (item_id, character_id)
 );
 
@@ -57,7 +65,10 @@ CREATE TABLE `quest_log` (
 	quest_id			INT						NOT NULL			REFERENCES items(item_id),
     character_id	INT						NOT NULL			REFERENCES characters(character_id),
     created			DATETIME			NOT NULL			DEFAULT NOW(),
-	completed		DATETIME
+	completed		DATETIME,
+    
+    CONSTRAINT quest_log_fk_quests FOREIGN KEY (quest_id) REFERENCES quests(quest_id),
+    CONSTRAINT quest_log_fk_characters FOREIGN KEY (character_id) REFERENCES characters(character_id)
 );
 
 INSERT INTO classes VALUES 
