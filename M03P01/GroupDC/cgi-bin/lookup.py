@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # city.py 
 import cgitb, cgi
 import mysql.connector
