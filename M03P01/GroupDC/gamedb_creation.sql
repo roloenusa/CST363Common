@@ -31,7 +31,8 @@ CREATE TABLE `quests` (
     type_id			INT						NOT NULL 			REFERENCES item_types(type_id),
 	`title`				VARCHAR(100)	NOT NULL			UNIQUE,
     `description`	VARCHAR(200), 
-	prize				INT 						NOT NULL		DEFAULT 0
+	reward				INT 						NOT NULL		DEFAULT 0,
+    xp					INT 						NOT NULL		DEFAULT 0
 );
 
 CREATE TABLE `characters` (
@@ -97,16 +98,16 @@ INSERT INTO quest_types VALUES
     (DEFAULT, 'talk'),
     (DEFAULT, 'destroy');
     
-INSERT INTO quests (type_id, `title`, `description`, prize) VALUES 
-	(1, 'All orcs must die', 'The orcs are terrorizing the mountains!', 200),
-    (1, 'The threat of sleepy hollow', 'Slain the headless horseman', 20),
-    (1, 'Valhalla', 'Kill 20 vikings so they can reach valhalla', 1255),
-    (2, 'An tasty stew', 'Get 20 potatoes so Mrs Crabby Pants can make a stew', 323),
-    (2, 'Call to Arms', 'Gather 10 swords and 10 shields for the army', 530),
-    (2, 'Flowers for Amy', 'Amy is sick. Get her a bouquet of flowers', 670),
-    (3, 'The Following', 'Follow Master Kenobi to the training grounds', 577),
-    (3, 'Show Me the Grounds', 'The Master Chief wants to show you the ship.', 879),
-    (4, 'Make them Talk', 'The spy you captured must be made to talk!', 1355),
-    (4, 'You Wouldn\'t like me when I\'m angry!', 'It\'s time to release the hulk! Make bruce very upset', 886),
-    (5, 'Save the village', 'Throw water in every building that is on fire', 556),
-    (5, 'Break Their Lines', 'Use the calvary to overrun their troops. Break their defenses to win!', 432);
+INSERT INTO quests (type_id, `title`, `description`, reward, xp) VALUES 
+	(1, 'All orcs must die', 'The orcs are terrorizing the mountains!', 200, FLOOR(RAND()*1000)),
+    (1, 'The threat of sleepy hollow', 'Slain the headless horseman', 20, FLOOR(RAND()*1000)),
+	(1, 'Valhalla', 'Kill 20 vikings so they can reach valhalla', 1255, FLOOR(RAND()*1000)),
+	(2, 'An tasty stew', 'Get 20 potatoes so Mrs Crabby Pants can make a stew', 323, FLOOR(RAND()*1000)),
+    (2, 'Call to Arms', 'Gather 10 swords and 10 shields for the army', 530, FLOOR(RAND()*1000)),
+    (2, 'Flowers for Amy', 'Amy is sick. Get her a bouquet of flowers', 670, FLOOR(RAND()*1000)),
+    (3, 'The Following', 'Follow Master Kenobi to the training grounds', 577, FLOOR(RAND()*1000)),
+    (3, 'Show Me the Grounds', 'The Master Chief wants to show you the ship.', 879, FLOOR(RAND()*1000)),
+    (4, 'Make them Talk', 'The spy you captured must be made to talk!', 1355, FLOOR(RAND()*1000)),
+    (4, 'You Wouldn\'t like me when I\'m angry!', 'It\'s time to release the hulk! Make bruce very upset', 886, FLOOR(RAND()*1000)),
+    (5, 'Save the village', 'Throw water in every building that is on fire', 556, FLOOR(RAND()*1000)),
+    (5, 'Break Their Lines', 'Use the calvary to overrun their troops. Break their defenses to win!', 432, FLOOR(RAND()*1000));

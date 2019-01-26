@@ -100,3 +100,74 @@ class ItemType(object):
     for r in rows:
       records.append(ItemType(*r))
     return records
+
+class Quest(object):
+  get_all_sql = """SELECT q.quest_id, q.type_id, type.name as type_name, q.title, q.description, q.reward, q.xp
+    FROM quests q
+    JOIN quest_types type USING (type_id)
+  """
+
+  get_by_id_sql = """SELECT q.quest_id, q.type_id, type.name as type_name, q.title, q.description, q.reward, q.xp
+    FROM quests q
+    JOIN quest_types type USING (type_id)
+    WHERE q.quest_id = %s
+  """
+
+  get_by_name_sql = """SELECT q.quest_id, q.type_id, type.name as type_name, q.title, q.description, q.reward, q.xp
+    FROM quests q
+    JOIN quest_types type USING (type_id)
+    WHERE q.name = %s
+  """
+
+  create_sql = """INSERT INTO quests (type_id, title, description, reward, xp) 
+  VALUES (%s, %s, %s, %s, %s)
+  """
+
+  def __init__(self, quest_id, type_id, type_name, title, description, reward, xp):
+    self.quest_id = quest_id
+    self.type_id = type_id
+    self.type_name = type_name
+    self.title = title
+    self.description = description
+    self.reward = reward
+    self.xp = xp
+
+  def GetAll():
+    cursor = Cnx.RunQuery(Quest.get_all_sql, ())
+    rows = cursor.fetchall()
+    records = []
+    for r in rows:
+      records.append(Quest(*r))
+    return records
+
+  def Get(quest_id):
+    cursor = Cnx.RunQuery(Quest.get_by_id_sql, (quest_id,))
+    row = cursor.fetchone()
+    print(row)
+    if not row:
+      return None
+    return Quest(*row)
+
+  def Create(type_id, title, description, reward = 0, xp = 0):
+    cursor = Cnx.RunQuery(Quest.create_sql, (type_id, title, description, reward, xp))
+    quest_id = cursor.lastrowid
+    return Quest.Get(quest_id)
+
+class QuestType(object):
+  get_all_sql = "SELECT type_id, name FROM quest_types"
+
+  get_by_id_sql = "SELECT type_id, name FROM quest_types WHERE quest_id = %s"
+
+  get_by_name_sql = "SELECT type_id, name FROM quest_types WHERE name = %s"
+
+  def __init__(self, type_id, type_name):
+    self.type_id = type_id
+    self.name = type_name
+
+  def GetAll():
+    cursor = Cnx.RunQuery(QuestType.get_all_sql, ())
+    rows = cursor.fetchall()
+    records = []
+    for r in rows:
+      records.append(QuestType(*r))
+    return records
