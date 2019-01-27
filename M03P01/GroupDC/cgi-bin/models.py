@@ -171,3 +171,19 @@ class QuestType(object):
     for r in rows:
       records.append(QuestType(*r))
     return records
+
+class Character(object):
+  get_all_sql = "SELECT character_id, name FROM classes"
+
+  get_by_id_sql = "SELECT character_id, name FROM classes WHERE class_id = %s"
+
+  get_by_name_sql = "SELECT character_id, name FROM classes WHERE name = %s"
+
+  def __init__(self, class_id, type_name):
+    self.class_id = class_id
+    self.name = type_name
+
+  def Create(character_id, name, level, exeperience, gold):
+    cursor = Cnx.RunQuery(Character.create_sql, (character_id, name, level, experience, gold))
+    quest_id = cursor.lastrowid
+    return Character.Get(character_id)

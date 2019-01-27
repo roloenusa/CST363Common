@@ -1,0 +1,55 @@
+<html>
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css">
+</head>
+<body>
+	<div class='container'>
+    	<h2>Character Creation</h2>
+		<hr />
+		<form action="/cgi-bin/character.py" method="post">
+			<div class="form-group row">
+				<label class="col-sm-2 col-form-label">Name</label>
+				<div class="col-sm-3">
+				    <input type="text" name="name" class="form-control" placeholder="character name" required>
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-2 col-form-label">Type</label>
+				<div class="col-sm-3">
+					<select class="form-control" name="class_id">
+						<option value="1" >Druid</option>
+						<option value="2" >Hunter</option>
+						<option value="3" >Mage</option>
+						<option value="4" >Priest</option>
+						<option value="5" >Rogue</option>
+						<option value="6" >Warrior</option>
+					</select>
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-2 col-form-label">Level</label>
+				<div class="col-sm-3">
+					<input type="text" name="level" class="form-control" placeholder="level" required>
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-2 col-form-label">Experience</label>
+				<div class="col-sm-3">
+					<input type="text" name="experience" value="0" class="form-control" placeholder="experience" required>
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-2 col-form-label">Gold</label>
+				<div class="col-sm-3">
+					<input type="text" name="gold" value="0" class="form-control" placeholder="gold" required>
+				</div>
+			</div>
+			<div class="form-group row">
+				<div class="col-sm-6">
+					<input type="submit" name="create" value="create" class="btn btn-primary" />
+				</div>
+			</div>
+		</form>
+	</div>
+</body>
+</html>
