@@ -156,10 +156,6 @@ class Quest(object):
 class QuestType(object):
   get_all_sql = "SELECT type_id, name FROM quest_types"
 
-  get_by_id_sql = "SELECT type_id, name FROM quest_types WHERE quest_id = %s"
-
-  get_by_name_sql = "SELECT type_id, name FROM quest_types WHERE name = %s"
-
   def __init__(self, type_id, type_name):
     self.type_id = type_id
     self.name = type_name
@@ -173,17 +169,140 @@ class QuestType(object):
     return records
 
 class Character(object):
-  get_all_sql = "SELECT character_id, name FROM classes"
+  get_all_sql = """SELECT c.character_id, k.class_id, k.name as class_name, c.name, c.level, c.experience, c.gold
+    FROM characters c
+    JOIN classes k USING (class_id)
+  """
 
-  get_by_id_sql = "SELECT character_id, name FROM classes WHERE class_id = %s"
+  get_by_id_sql = """SELECT c.character_id, c.class_id, k.name as class_name, c.name, c.level, c.experience, c.gold
+    FROM characters c
+    JOIN classes k USING (class_id)
+    WHERE c.character_id = %s
+  """
 
-  get_by_name_sql = "SELECT character_id, name FROM classes WHERE name = %s"
+  get_by_name_sql = """SELECT c.character_id, c.class_id, k.name as class_name, c.name, c.level, c.experience, c.gold
+    FROM characters c
+    JOIN classes k USING (class_id)
+    WHERE c.character_name = %s
+  """
 
-  def __init__(self, class_id, type_name):
+  create_sql = """INSERT INTO characters (class_id, name, level, experience, gold) 
+  VALUES (%s, %s, %s, %s, %s)
+  """
+
+  complete_sql = """UPDATE character SET gold = gold + %s, experience = experience + %s
+  WHERE character_id = %s
+  """
+
+  def __init__(self, character_id, class_id, class_name, name, level, experience, gold, cAdded = 0, cCompleted = 0):
+    self.character_id = character_id
     self.class_id = class_id
-    self.name = type_name
+    self.class_name = class_name
+    self.name = name
+    self.level = level
+    self.experience = experience
+    self.gold = gold
 
-  def Create(character_id, name, level, exeperience, gold):
-    cursor = Cnx.RunQuery(Character.create_sql, (character_id, name, level, experience, gold))
-    quest_id = cursor.lastrowid
+  def Create(class_id, name, level, experience, gold):
+    cursor = Cnx.RunQuery(Character.create_sql, (class_id, name, level, experience, gold))
+    character_id = cursor.lastrowid
     return Character.Get(character_id)
+  
+  def Get(character_id):
+    cursor = Cnx.RunQuery(Character.get_by_id_sql, (character_id,))
+    row = cursor.fetchone()
+    print(row)
+    if not row:
+      return None
+    return Character(*row)
+
+  def GetAll():
+    cursor = Cnx.RunQuery(Character.get_all_sql, ())
+    rows = cursor.fetchall()
+    records = []
+    for r in rows:
+      records.append(Character(*r))
+    return records
+  
+  def CompleteQuest(character_id, quest_id):
+    quest = Quest.Get(quest_id)
+    Cnx.RunQuery(Character.complete_sql, (quest.gold, quest.xp, character_id))
+
+class Klass(object):
+  get_all_sql = "SELECT class_id, name FROM classes"
+
+  def __init__(self, class_id, name):
+    self.class_id = class_id
+    self.name = name
+
+  def GetAll():
+    cursor = Cnx.RunQuery(Klass.get_all_sql, ())
+    rows = cursor.fetchall()
+    records = []
+    for r in rows:
+      records.append(Klass(*r))
+    return records
+
+class QuestLog(object):
+
+  get_by_character_id_sql = """SELECT q.quest_id, q.type_id, type.name as type_name, q.title, q.description, q.reward, q.xp, ql.created, ql.completed
+    FROM quests q
+    JOIN quest_log ql USING (quest_id)
+    JOIN quest_types type USING (type_id)
+    WHERE ql.character_id = %s
+  """
+
+  get_by_id_sql = """SELECT ql.character_id, ql.quest_id, ql.created, ql.completed
+    FROM quest_log ql
+    WHERE ql.quest_id = %s
+  """
+
+  create_sql = """INSERT INTO quest_log (character_id, quest_id) 
+  VALUES (%s, %s)
+  """
+
+  complete_sql = """UPDATE quest_log SET completed = NOW()
+  WHERE character_id = %s and quest_id = %s and completed IS NULL
+  """
+
+  can_add_sql = """SELECT quest_id
+  FROM quest_log
+  WHERE character_id = %s and quest_id = %s and completed IS NULL
+  """
+
+  def __init__(self, ql_id, char_id, quest_id, created, completed):
+    self.quest_log_id = class_id
+    self.character_id = char_id
+    self.quest_id = quest_id
+    self.created = created
+    self.completed = completed
+
+  def GetCharacterQuests(character_id):
+    cursor = Cnx.RunQuery(QuestLog.get_by_character_id_sql, (character_id,))
+    rows = cursor.fetchall()
+    records = []
+    for r in rows:
+      records.append(Quest(*r))
+    return records
+  
+  def Get(quest_log_id):
+    cursor = Cnx.RunQuery(QuestLog.get_by_id_sql, (quest_log_id,))
+    row = cursor.fetchone()
+    print(row)
+    if not row:
+      return None
+    return QuestLog(*row)
+  
+  def CanAdd(character_id, quest_id):
+    cursor = Cnx.RunQuery(QuestLog.can_add_sql, (character_id, quest_id))
+    return not cursor.fetchone()
+  
+  def AddQuest(character_id, quest_id):
+    if QuestLog.CanAdd(character_id, quest_id):
+      cursor = Cnx.RunQuery(QuestLog.create_sql, (character_id, quest_id))
+      return cursor.lastrowid
+    return False
+
+  def CompleteQuest(character_id, quest_id):
+    cursor = Cnx.RunQuery(QuestLog.complete_sql, (character_id, quest_id))
+    character = Character.CompleteQuest(character_id, quest_id)

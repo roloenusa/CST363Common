@@ -13,7 +13,7 @@
 # this file must be in the /cgi-bin/ directory of the server
 import cgitb
 import cgi
-from models import Cnx, Quest, QuestType
+from models import Cnx, Quest, QuestType, QuestLog
 
 Cnx.Connect('gameadmin', 'sesame', 'gamedb', 'localhost')
 
@@ -22,7 +22,10 @@ form = cgi.FieldStorage()
 
 alerts = []
 
-if form:
+character_id = False
+quest_id = False
+
+if 'create' in form:
   type_id = int(form["type_id"].value.strip())
   title = form["title"].value.strip()
   description = form["description"].value.strip()
@@ -32,6 +35,19 @@ if form:
     Quest.Create(type_id = type_id, title = title, description = description, reward = reward, xp = xp)
   except Exception as e:
     alerts.append(('danger', e))
+
+if 'character_id' in form:
+  character_id = form['character_id'].value
+
+if 'quest_id' in form:
+  quest_id = form['quest_id'].value
+
+if character_id and quest_id:
+  res = QuestLog.AddQuest(character_id, quest_id)
+  if res:
+    alerts.append(('success', "Quest added!"))
+  else:
+    alerts.append(('danger', "Unable to add quest."))
 
 print("Content-Type: text/html")    # HTML is following
 print()                             # blank line required, end of headers
@@ -58,6 +74,7 @@ print(" <th>Description</th>")
 print(" <th>Type</th>")
 print(" <th>Reward</th>")
 print(" <th>Experience</th>")
+print(" <th></th>")
 print(" </tr>")
 print(" <tbody>")
 for quest in quests:
@@ -68,6 +85,10 @@ for quest in quests:
   print(" <td>%s</td>" % quest.type_name)
   print(" <td>%s</td>" % quest.reward)
   print(" <td>%s</td>" % quest.xp)
+  if QuestLog.CanAdd(character_id, quest.quest_id):
+    print(" <td><a href='./quests.py?character_id=%s&quest_id=%s'>Add</a></td>" % (character_id, quest.quest_id))
+  else:
+    print(" <td></td>")
   print(" </tr>")
 print(" </tbody>")
 print("</table>")
