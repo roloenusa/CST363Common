@@ -15,7 +15,7 @@ import cgitb
 import cgi
 from models import Cnx, Quest, QuestType
 
-Cnx.Connect('root', 'sesame', 'gamedb', 'localhost')
+Cnx.Connect('gameadmin', 'sesame', 'gamedb', 'localhost')
 
 cgitb.enable()
 form = cgi.FieldStorage()

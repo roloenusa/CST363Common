@@ -1,6 +1,11 @@
 DROP DATABASE IF EXISTS gamedb;
 CREATE DATABASE gamedb;
 
+-- create a user and grant privileges to that user
+CREATE USER 'gameadmin'@'localhost' IDENTIFIED BY 'sesame';
+GRANT ALL PRIVILEGES ON gamedb.* TO 'gameadmin'@'localhost'
+	WITH GRANT OPTION;
+
 USE gamedb;
 
 CREATE TABLE `classes` (

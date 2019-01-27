@@ -111,4 +111,5 @@ venv.bak/
 **/*.pyc
 **/personal
 .vs
+.vscode
 **/*.DS_Store
