@@ -76,13 +76,16 @@ INSERT INTO airports VALUES
 (3, 'Miami Int', 'Miami', 'USA', 'MIA'),
 (4, 'John FK Int', 'New York City', 'USA', 'JFK'),
 (5, 'Phily Int', 'Phily', 'USA', 'PHL'),
-(6, 'Dallas/Fort', 'Dallas', 'USA', 'DFW');
+(7, 'H-J ATL Intl', 'Atlanta', 'USA', 'ATL'),
+(8, 'BC Intl', 'Bijing', 'China', 'PEK'),
+(9, 'T Haneda', 'Tokyo', 'Japan', 'HND'),
+(10, 'Indira Gandhi intl', 'Delhi', 'India', 'DEL');
 
 INSERT INTO login VALUES 
 (1,'abou','diaw','ad@ad.com','adiaw','1234'),
-(2,'adou','diallo','ad@ad.com','doudou','1234'),
-(3,'karim','bobo','user2@ad.com','user2id', '1234'),
-(4,'madi','lastname3','user3@ad.sys','user3', '1234');
+(2,'papi','diallo','pd@ad.com','papi','1234'),
+(3,'cristian','ramirez','cr@ad.com','cpr', '1234'),
+(4,'madi','brown','md@ad.com','mb20', '1234');
 
 
 INSERT INTO flight VALUES
