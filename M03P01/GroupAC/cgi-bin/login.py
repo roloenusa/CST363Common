@@ -4,6 +4,7 @@ import cgitb , cgi
 import mysql.connector
 cgitb.enable()
 form = cgi.FieldStorage()
+
 username = form ["username"].value
 password = form["password"].value
 
@@ -19,10 +20,39 @@ def page_style():
 	print(""" 
 	<head>
 	<style>
-	table, th, td {
-	border: 1px solid black;
-	}
 	
+	
+	ul{
+		list-style-type: none;
+		margin: 0;
+		padding: 0;
+		overflow: hidden;
+		background-color: #333;
+	  }
+
+	li{
+		float: left;
+	  }
+
+	li a{
+		display: block;
+		color: white;
+		text-align: center;
+		padding: 16px 18px;
+		text-decoration: none;
+		}
+
+	li a:hover:not(.active) {
+		background-color: #111;
+		}
+
+	.active {
+		background-color: #4CAF50;
+	}
+
+	body {
+		background-color: #d9f2d9;	
+		}
 	#flights {
 	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
 	border-collapse: collapse;
@@ -44,52 +74,15 @@ def page_style():
 	text-align: left;
 	background-color: #4CAF50;
 	color: white;
-	}   
-	    input[type=text], select {
-  width: 100%;
-  padding: 12px 20px;
-  margin: 8px 0;
-  display: inline-block;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  box-sizing: border-box;
-}
-
-input[type=submit] {
-  width: 100%;
-  background-color: #4CAF50;
-  color: white;
-  padding: 14px 20px;
-  margin: 8px 0;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-input[type=submit]:hover {
-  background-color: #45a049;
-}
-
-div {
-  border-radius: 5px;
-  background-color: #f2f2f2;
-  padding: 1px;
-}
-
-#logon{
-background-color: green
-}
-	
+	}  
 	
 	</style>
 	</head>
 	
 	""")
 
-
 def flights():
-	print("<h1>Available Flights:</h1>")
-    
+	print("<h3>all available flights:</h3>")    
 	print("""<table id = "flights">
 	<tr>
 		<th>FilightID:  </th>
@@ -102,7 +95,7 @@ def flights():
 	</tr	
 	</table>""")
 	
-	qsql = 'SELECT flight_id, concat(departure_date,"/",departure_time) as leaving, concat(arrival_date,"/",arrival_time) as arriving, flight_seat,ticket_type, flight_from, flight_destination from flight order by flight_id;'
+	qsql = 'SELECT flight_id, concat(departure_date,"/",departure_time) as leaving, concat(arrival_date,"/",arrival_time) as arriving, flight_seat,ticket_type, src_airport_code, dest_airport_code from flight order by flight_id;'
 	# connect to database
 	try:
 		cnx = db_connection()                                          
@@ -119,19 +112,39 @@ def flights():
 		print("ERROR", err)    
 	finally:
 		cnx.close()  # close the connection 
-	
 
+def get_reservation():
+	print("<h3>Your current reservation:</h3>")    
+	print("""<table id = "flights">
+	<tr>
+		<th>Reservation ID:  </th>
+		<th>Flight ID:</th>
+		<th>Passenger ID:</th>
+		<th>Booked by:</th>
+	</tr	
+	</table>""")
+	find_reservations = 'SELECT * from reservation where  (select acc_number from login where user_name = %s)'
+	try:
+		cnx = db_connection()                                          
+		cursor = cnx.cursor()  
+		cursor.execute(find_reservations,(username,))	
+		row = cursor.fetchone()
+		while row is not None:
+			print ('<tr><td>%s <td>%s <td>%s <td>%s </tr>' % row)
+			row = cursor.fetchone()		
+		print('</table>')
+		print("<br>")
+		print("<br>")        
+	except mysql.connector.Error as err:
+		print("ERROR", err)    
+	finally:
+		cnx.close()  # close the connection
 
+# Function handles login
 def login():
-	print("Content-Type: text/html")    # HTML is following
-	print()
-	page_style()
-	
-	print("<body><html>")
-	#print('<div id="logon"><span style="color:white">Logon as: %s</span></div>' %(user_name))
+		
 	qsql = 'select * from login where user_name = %s'
-	insert_sql = 'insert into login (user_name, password, visits) values (%s, %s, 1)'
-	update_sql = 'update login set visits = visits + 1 where user_name=%s'
+
 	# connect to database
 	cnx = db_connection()
     #  code to do SQL goes here
@@ -145,10 +158,18 @@ def login():
 	else:
             # retrieve number of visits value from row and increment
 		if password == row[5]:
-			flights()
-			booking()
+			print("""<ul>
+						<li><a href="http://127.0.0.1:8000/login.html">Logout</a></li>
+					</ul>""")
+			print('<a href="http://127.0.0.1:8000/reservation.html">View Your Reservation |</a>')
+			print('<a href="http://127.0.0.1:8000/reservation.html">Make a Reservation |</a>')
+			print('<a href="http://127.0.0.1:8000/cancel.html">Cancel a Reservation |</a>')
+			print('<a href="http://127.0.0.1:8000/search.html">Search a Reservation |</a>')
+			print("<h2>Welcome to FRS!<h2>")
 			get_reservation()
-			cancel_booking()
+			flights()
+			print("</body></html>")
+			
 			
 			#process booking form
 
@@ -156,66 +177,23 @@ def login():
 		else:
 			print('your password is incorrect')
 			print('<a href="http://127.0.0.1:8000/login.html">Click here to go back</a>')
-    
-	print("</body></html>")
-	cnx.close()  # close the connection 
-  
-def booking():
-	print("<h1>Book a flight</h1>")
-	print("""<div>
-	<form action="/cgi-bin/reservation.py">
-    <label for="fname">Passenger First Name</label>
-    <input type="text" id="fname" name="firstname" required>
-    <label for="lname">Passenger Last Name</label>
-    <input type="text" id="lname" name="lastname" required>
-	<label for="email">Passenger email</label>
-    <input type="text" id="email" name="email" required>
-	<label for="flightid">FlightID</label>
-    <input type="text" id="flightid" name="flightid" required>
-	<label for="username">Logged in Username</label>
-    <input type="text" id="username" name="username" required>
-    <input type="submit" value="Submit">
-	</form>
-	</div>""")
-def get_reservation():
-	print("<h1>Your current reservation</h1>")    
-	print("""<table id = "flights">
-	<tr>
-		<th>Reservation ID:  </th>
-		<th>Flight ID:</th>
-		<th>Passenger ID:</th>
-		<th>Booked by:</th>
-	</tr	
-	</table>""")
-	find_reservations = 'SELECT * from reservation'
-	try:
-		cnx = db_connection()                                          
-		cursor = cnx.cursor()  
-		cursor.execute(find_reservations)	
-		row = cursor.fetchone()
-		while row is not None:
-			print ('<tr><td>%s <td>%s <td>%s <td>%s </tr>' % row)
-			row = cursor.fetchone()		
-		print('</table>')
-		print("<br>")
-		print("<br>")        
-	except mysql.connector.Error as err:
-		print("ERROR", err)    
-	finally:
-		cnx.close()  # close the connection
-def cancel_booking():
-	print("<h1>Cancel booking</h1>")
-	print("""<div>
-		<form action="/cgi-bin/cancel_reservation.py">
-		<label for="reservationid">ReservationID:</label>
-		<input type="text" id="reservationid" name="reservationid" required>
-		
-    <input type="submit" value="Submit">
-	</form>
-	</div>""")
+
+
+
+
+print("Content-Type: text/html")    # HTML is following
+print()
+page_style()
+print("<body><html>")
+#site
+
 login()
+
+
 		
   
+
+	
 
 		
     

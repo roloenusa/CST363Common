@@ -124,7 +124,6 @@ body {
 def menu():	
 	print("""
 	<ul>
-		<li><a href="/registration.html" class="active">Reservations:</a></li>
 		<li><a href="/login.html">LogOut:</a></li>
 	</ul>""")
 
@@ -137,6 +136,10 @@ print()
 page_style()
 print("<body><html>")
 menu()
+print('<a href="http://127.0.0.1:8000/reservation.html">Make A Reservation |</a>')
+print('<a href="http://127.0.0.1:8000/cancel.html">Cancel A Reservation |</a>')
+print('<a href="http://127.0.0.1:8000/reservation.html">View Your Reservation |</a>')
+print('<a href="http://127.0.0.1:8000/search.html">Search for a flight|</a>')
 cnx = db_connection()
 cursor = cnx.cursor()  
 cursor.execute(chkpassenger,(firstname,lastname))
