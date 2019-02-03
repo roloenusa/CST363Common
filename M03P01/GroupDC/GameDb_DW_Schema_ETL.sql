@@ -120,6 +120,13 @@ INSERT INTO gamedbdw.items
     FROM gamedb.items
     JOIN gamedb.item_types t USING (type_id);
 
+/* load gamedbdw inventory table from gamedb */
+INSERT INTO gamedbdw.bi_inventory (characterid, itemid, quantity, total)
+    SELECT inv.character_id, inv.item_id, inv.quantity, inv.quantity * i.cost
+    FROM gamedb.inventory inv
+    JOIN gamedb.items i USING (item_id)
+    WHERE inv.quantity > 0;
+
 /* load gamedbdw quests table from gamedb */
 INSERT INTO gamedbdw.quests (questid, type, experience, gold)
     SELECT quest_id, t.name, xp, reward
