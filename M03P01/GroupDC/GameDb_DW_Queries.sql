@@ -56,19 +56,19 @@ SELECT * FROM character_dashboard;
 
 /**
  * Question 1:
- * What are the are the quests that are most often completed and by how many distinct characters?
+ * What are the quests that are most often completed and by how many distinct characters?
  * Order by the times it's been completed, the disctinct character count, and the type of quest.
  */
 SELECT questid, type, count(*) timescompleted, experience, gold, characterCount
-    FROM fact_quest_log fql
-    JOIN quests USING (questid)
-    JOIN (
-        SELECT questid, count(distinct characterid) as characterCount
-        FROM fact_quest_log
-        WHERE duration IS NOT NULL GROUP BY questid
-    ) cc USING (questid)
+FROM fact_quest_log fql
+JOIN quests USING (questid)
+JOIN (
+    SELECT questid, count(distinct characterid) as characterCount
+    FROM fact_quest_log
     WHERE duration IS NOT NULL GROUP BY questid
-    ORDER BY timescompleted DESC, charactercount DESC, type ASC;
+) cc USING (questid)
+WHERE duration IS NOT NULL GROUP BY questid
+ORDER BY timescompleted DESC, charactercount DESC, type ASC;
 
 /**
  * Question 2:
@@ -95,9 +95,11 @@ GROUP BY q.type, q.questid WITH ROLLUP;
  * Question 4:
  * What are the quests that have paid the most amount of gold?
  */
- SELECT questid, gold FROM gamedbdw.quests ORDER BY gold DESC;
- 
- 
+SELECT q.questid, q.type, q.gold, sum(q.gold) as totalawarded, count(*) payoutcount
+FROM quests q
+JOIN fact_quest_log USING (questid)
+GROUP BY q.questid ORDER BY totalawarded;
+
  /**
   * Question 5:
   * What are the most popular items broken by total quantity sold, and gold value per unit and total?
