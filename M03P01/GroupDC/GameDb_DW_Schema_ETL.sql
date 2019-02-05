@@ -12,6 +12,15 @@ DROP SCHEMA IF EXISTS gamedbdw;
 CREATE SCHEMA gamedbdw;
 USE gamedbdw;
 
+/*  months table used when loading timeline table */
+CREATE TABLE months (
+	monthid     INT         NOT NULL,
+	monthtext   CHAR(15)    NOT NULL,
+	quarterid   INT         NOT NULL,
+	quartertext CHAR(10)    NOT NULL
+);
+
+/* Timeline to breakdown the relation between dates, and time of year. */
 CREATE TABLE timeline(
 	timeid      INT         NOT NULL AUTO_INCREMENT PRIMARY KEY,
 	date        DATETIME    NOT NULL,
@@ -23,6 +32,7 @@ CREATE TABLE timeline(
 	year        CHAR(10)    NOT NULL
 );
 
+/* Character dimension table. */
 CREATE TABLE characters (
 	characterid INT             NOT NULL PRIMARY KEY,
     `name`      VARCHAR(75)     NOT NULL,
@@ -32,6 +42,7 @@ CREATE TABLE characters (
     assets      INT             default 0
 );
 
+/* Quest Dimensions table */
 CREATE TABLE quests (
 	questid     INT         NOT NULL    PRIMARY KEY,
 	type	    CHAR(25)    NOT NULL,
@@ -39,6 +50,7 @@ CREATE TABLE quests (
     gold        INT         NOT NULL
 );
 
+/* Quest -> Character Fact table */
 CREATE TABLE bi_quest_log (
     characterid	INT         NOT NULL,
     questid	    INT         NOT NULL,
@@ -49,36 +61,28 @@ CREATE TABLE bi_quest_log (
 	CONSTRAINT bi_quest_log_pk PRIMARY KEY (characterid, questid, in_timeid),
 	CONSTRAINT created_timeline_fk FOREIGN KEY (in_timeid) REFERENCES timeline(timeid),
     CONSTRAINT completed_timeline_fk FOREIGN KEY (done_timeid) REFERENCES timeline(timeid),
-    CONSTRAINT characterid_characters_fk FOREIGN KEY (characterid) REFERENCES characters(characterid)
-        on delete no action on update no action,
+    CONSTRAINT characterid_characters_fk FOREIGN KEY (characterid) REFERENCES characters(characterid),
     CONSTRAINT questid_quests_fk FOREIGN KEY (questid) REFERENCES quests(questid)
-        on delete no action	on update no action
 );
 
+/* Item Dimension table */
 CREATE TABLE items (
-	itemid      CHAR(35)    NOT NULL    PRIMARY KEY,
+	itemid      INT    NOT NULL    PRIMARY KEY,
 	type	    CHAR(25)    NOT NULL,
 	cost        INT         NOT NULL
 );
 
+/* Item -> Character Fact table */
 CREATE TABLE bi_inventory (
-    characterid	int         NOT NULL,
+    characterid	INT         NOT NULL,
     itemid	    INT         NOT NULL,
     quantity    INT         NOT NULL,
     total       INT         NOT NULL,
 
-	CONSTRAINT bi_inventory_pk PRIMARY KEY (characterid, itemid)
+	CONSTRAINT bi_inventory_pk PRIMARY KEY (characterid, itemid),
+    CONSTRAINT inventory_characters_fk FOREIGN KEY (characterid) REFERENCES characters(characterid),
+    CONSTRAINT inventory_items_fk FOREIGN KEY (itemid) REFERENCES items(itemid)
 );
-
-/*  months table used when loading timeline table */
-
-CREATE TABLE months (
-	monthid     INT         NOT NULL,
-	monthtext   CHAR(15)    NOT NULL,
-	quarterid   INT         NOT NULL,
-	quartertext CHAR(10)    NOT NULL
-);
-
 
 INSERT INTO months VALUES
 (1, 'January', 1, 'Qtr1'),
