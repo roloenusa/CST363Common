@@ -35,30 +35,37 @@ CREATE TABLE timeline(
 /* Character dimension table. */
 CREATE TABLE characters (
 	characterid INT             NOT NULL PRIMARY KEY,
-    `name`      VARCHAR(75)     NOT NULL,
-	`level`     VARCHAR(100)    NOT NULL,
+    `name`      VARCHAR(30)     NOT NULL,
+	`level`     INT             NOT NULL,
+    `class`     VARCHAR(30)     NOT NULL
+);
+
+CREATE TABLE fact_characters (
+    characterid INT             NOT NULL PRIMARY KEY,
 	experience  INT             NOT NULL,
 	gold        INT             NOT NULL,
-    assets      INT             default 0
+    assets      INT             DEFAULT 0,
+
+    CONSTRAINt fact_character_characters_fk FOREIGN KEY (characterid) REFERENCES characters(characterid)
 );
 
 /* Quest Dimensions table */
 CREATE TABLE quests (
 	questid     INT         NOT NULL    PRIMARY KEY,
-	type	    CHAR(25)    NOT NULL,
-	experience  VARCHAR(75) NOT NULL,
+	type	    VARCHAR(30) NOT NULL,
+	experience  int         NOT NULL,
     gold        INT         NOT NULL
 );
 
 /* Quest -> Character Fact table */
-CREATE TABLE bi_quest_log (
+CREATE TABLE fact_quest_log (
     characterid	INT         NOT NULL,
     questid	    INT         NOT NULL,
     in_timeid   INT         NOT NULL,
     done_timeid INT,
     duration    INT,
 
-	CONSTRAINT bi_quest_log_pk PRIMARY KEY (characterid, questid, in_timeid),
+	CONSTRAINT fact_quest_log_pk PRIMARY KEY (characterid, questid, in_timeid),
 	CONSTRAINT created_timeline_fk FOREIGN KEY (in_timeid) REFERENCES timeline(timeid),
     CONSTRAINT completed_timeline_fk FOREIGN KEY (done_timeid) REFERENCES timeline(timeid),
     CONSTRAINT characterid_characters_fk FOREIGN KEY (characterid) REFERENCES characters(characterid),
@@ -67,19 +74,19 @@ CREATE TABLE bi_quest_log (
 
 /* Item Dimension table */
 CREATE TABLE items (
-	itemid      INT    NOT NULL    PRIMARY KEY,
-	type	    CHAR(25)    NOT NULL,
+	itemid      INT         NOT NULL    PRIMARY KEY,
+	type	    VARCHAR(30) NOT NULL,
 	cost        INT         NOT NULL
 );
 
 /* Item -> Character Fact table */
-CREATE TABLE bi_inventory (
+CREATE TABLE fact_inventory (
     characterid	INT         NOT NULL,
     itemid	    INT         NOT NULL,
     quantity    INT         NOT NULL,
     total       INT         NOT NULL,
 
-	CONSTRAINT bi_inventory_pk PRIMARY KEY (characterid, itemid),
+	CONSTRAINT fact_inventory_pk PRIMARY KEY (characterid, itemid),
     CONSTRAINT inventory_characters_fk FOREIGN KEY (characterid) REFERENCES characters(characterid),
     CONSTRAINT inventory_items_fk FOREIGN KEY (itemid) REFERENCES items(itemid)
 );
@@ -105,11 +112,17 @@ INSERT INTO gamedbdw.timeline (date, dayyear, monthid, monthtext, quarterid, qua
     UNION
     SELECT DISTINCT date(a.completed), dayofyear(a.completed), month(a.completed), b.monthtext, b.quarterid, b.quartertext, year(a.completed)
     FROM gamedb.quest_log a, gamedbdw.months b WHERE month(a.completed) = b.monthid AND completed IS NOT NULL;
-    
-	
+
+
 /* load the gamedbdw character table from gamedb customer */
-INSERT INTO gamedbdw.characters (characterid, name, level, experience, gold, assets)
-    SELECT c.character_id, c.name, level, c.experience, gold, item_total + quest_total
+INSERT INTO gamedbdw.characters (characterid, name, level, class)
+    SELECT c.character_id, c.name, level, cls.name
+    FROM gamedb.characters c
+    JOIN gamedb.classes cls USING (class_id);
+
+/* Load gamedbdw character fact table. */
+INSERT INTO gamedbdw.fact_characters (characterid, experience, gold, assets)
+    SELECT c.character_id, c.experience, gold, item_total + quest_total
     FROM gamedb.characters c
     LEFT JOIN (
         SELECT character_id, sum(cost * quantity) as item_total FROM gamedb.inventory JOIN gamedb.items USING (item_id) GROUP BY character_id
@@ -125,7 +138,7 @@ INSERT INTO gamedbdw.items
     JOIN gamedb.item_types t USING (type_id);
 
 /* load gamedbdw inventory table from gamedb */
-INSERT INTO gamedbdw.bi_inventory (characterid, itemid, quantity, total)
+INSERT INTO gamedbdw.fact_inventory (characterid, itemid, quantity, total)
     SELECT inv.character_id, inv.item_id, inv.quantity, inv.quantity * i.cost
     FROM gamedb.inventory inv
     JOIN gamedb.items i USING (item_id)
@@ -138,7 +151,7 @@ INSERT INTO gamedbdw.quests (questid, type, experience, gold)
     JOIN gamedb.quest_types t using (type_id);
 
 /* load gamedbdw quests logs table from gamedb */
-INSERT INTO gamedbdw.bi_quest_log (characterid, questid, in_timeid, done_timeid, duration)
+INSERT INTO gamedbdw.fact_quest_log (characterid, questid, in_timeid, done_timeid, duration)
     SELECT ql.character_id, ql.quest_id, tin.timeid, tout.timeid, (tout.dayyear - tin.dayyear)
     FROM gamedb.quest_log ql
     JOIN (SELECT timeid, dayyear, date FROM gamedbdw.timeline) tin ON tin.date = date(ql.created)
