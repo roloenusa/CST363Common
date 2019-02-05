@@ -94,6 +94,7 @@ GROUP BY q.type, q.questid WITH ROLLUP;
  * Question 4:
  * What are the quests that have paid the most amount of gold?
  */
+ SELECT questid, gold FROM gamedbdw.quests ORDER BY gold DESC;
  
  
  /**
