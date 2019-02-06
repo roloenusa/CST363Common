@@ -105,3 +105,9 @@ GROUP BY q.questid ORDER BY totalawarded;
   * What are the most popular items broken by total quantity sold, and gold value per unit and total?
   * What is the average level of the characters purchasing those items?
   */
+SELECT i.itemid, i.type, count(*) as quantity, i.cost, i.cost * count(*) as totalvalue, avg(c.level) as avgcharacterlevel
+FROM items i
+JOIN fact_inventory inv USING (itemid)
+JOIN characters c USING (characterid)
+GROUP BY i.itemid
+ORDER BY itemid;
