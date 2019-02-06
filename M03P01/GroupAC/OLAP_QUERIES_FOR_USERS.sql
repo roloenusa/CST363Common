@@ -13,11 +13,14 @@ from passenger p join flight_reservations r on p.passenger_id = r.passenger_id
 where f.dest_airport_code ='PHL';
 
 -- Find flight with destination to USA
+CREATE VIEW flights_by_destination AS
 SELECT r.flight_id as NumberOfFlight, a.airport_name as 'Airport Name', a.city_name AS 'City', a.country_name AS 'Country'
 from flight_reservations r join flight f on r.flight_id = f.flight_id 
 join airports a on f.dest_airport_code = a.airport_code
 where a.country_name = 'USA'
 group by a.airport_name;
+
+select * from flights_by_destination;
 
 -- Find flight with international destination
 SELECT r.flight_id as NumberOfFlight, a.airport_name as 'Airport Name', a.city_name AS 'City', a.country_name AS 'Country'
