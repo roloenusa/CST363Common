@@ -1,0 +1,104 @@
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+
+  input[type=text], select {
+  width: 100%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+input[type=submit] {
+  width: 100%;
+  background-color: #4CAF50;
+  color: white;
+  padding: 14px 20px;
+  margin: 8px 0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+input[type=submit]:hover {
+  background-color: #45a049;
+}
+
+div {
+  border-radius: 5px;
+  background-color: #f2f2f2;
+  padding: 1px;
+}
+
+
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #333;
+}
+
+li {
+  float: left;
+}
+
+li a {
+  display: block;
+  color: white;
+  text-align: center;
+  padding: 16px 18px;
+  text-decoration: none;
+}
+
+li a:hover:not(.active) {
+  background-color: #111;
+}
+
+.active {
+  background-color: #4CAF50;
+}
+
+body {
+ background-color: #d9f2d9;
+	
+}
+
+
+
+</style>
+</head>
+<body>
+<ul>
+	<li><a href="/login.html">LogOut:</a></li>
+</ul>
+
+<a href="http://127.0.0.1:8000/search.html">Search for a flight |</a>
+<a href="http://127.0.0.1:8000/cancel.html">Cancel a Reservation |</a>
+<a href="http://127.0.0.1:8000/reservation.html">View your Reservation |</a>
+<br>
+<br>
+
+<h2>Reserve a ticket:</h2>
+<div>
+	<form action="/cgi-bin/reservation.py">
+    <label for="fname">Passenger First Name</label>
+    <input type="text" id="fname" name="firstname" required>
+    <label for="lname">Passenger Last Name</label>
+    <input type="text" id="lname" name="lastname" required>
+	<label for="email">Passenger email</label>
+    <input type="text" id="email" name="email" required>
+	<label for="flightid">FlightID</label>
+    <input type="text" id="flightid" name="flightid" required>
+	<label for="username">Logged in Username</label>
+    <input type="text" id="username" name="username" required>
+    <input type="submit" value="Submit">
+	</form>
+</div>
