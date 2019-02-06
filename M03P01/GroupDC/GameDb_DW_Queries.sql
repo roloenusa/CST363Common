@@ -20,33 +20,34 @@ USE gamedbdw;
  */
  DROP VIEW IF EXISTS character_dashboard;
  CREATE VIEW character_dashboard AS
- SELECT c.characterid, c.name, c.level, c.gold, c.assets, c.experience, 
-    pbiql.totalgold as pending_gold, pbiql.totalexperience as pending_experience, pbiql.questCount as pending_quests,
-    pbiinv.totalassets as assets_count, pbiinv.totalgold as assets_value,
-    compbiql.totalgold as gold_from_quests, compbiql.totalexperience as experience_from_quests, compbiql.questCount as completed_quests,
-    (c.gold + ifnull(pbiinv.totalgold, 0) - ifnull(compbiql.totalgold, 0)) as starting_gold,
-    (c.experience - ifnull(pbiql.totalexperience, 0)) as starting_experience
+ SELECT c.characterid, c.name, c.level, c.class, fc.gold, fc.assets, fc.experience, 
+    pfql.totalgold as pending_gold, pfql.totalexperience as pending_experience, pfql.questCount as pending_quests,
+    pfinv.totalassets as assets_count, pfinv.totalgold as assets_value,
+    compfql.totalgold as gold_from_quests, compfql.totalexperience as experience_from_quests, compfql.questCount as completed_quests,
+    (fc.gold + ifnull(pfinv.totalgold, 0) - ifnull(compfql.totalgold, 0)) as starting_gold,
+    (fc.experience - ifnull(pfql.totalexperience, 0)) as starting_experience
  FROM characters c
+ JOIN fact_characters fc USING (characterid)
  LEFT JOIN (
     SELECT characterid, sum(experience) as totalexperience, count(*) questCount, sum(gold) as totalgold
-    FROM bi_quest_log biql
+    FROM fact_quest_log fql
     JOIN quests USING (questid)
-    WHERE biql.duration IS NULL
+    WHERE fql.duration IS NULL
     GROUP BY characterid
-) pbiql USING(characterid)
+) pfql USING(characterid)
 LEFT JOIN (
     SELECT characterid, sum(cost) as totalgold, sum(quantity) as totalassets
-    FROM bi_inventory biinv
+    FROM fact_inventory finv
     JOIN items USING (itemid)
     GROUP BY characterid
-) pbiinv USING (characterid)
+) pfinv USING (characterid)
 LEFT JOIN (
     SELECT characterid, sum(experience) as totalexperience, count(*) questCount, sum(gold) as totalgold
-    FROM bi_quest_log biql
+    FROM fact_quest_log fql
     JOIN quests USING (questid)
-    WHERE biql.duration IS NOT NULL
+    WHERE fql.duration IS NOT NULL
     GROUP BY characterid
-) compbiql USING (characterid);
+) compfql USING (characterid);
 
 /**
  * Display the view with the character statistics.
@@ -55,28 +56,28 @@ SELECT * FROM character_dashboard;
 
 /**
  * Question 1:
- * What are the are the quests that are most often completed and by how many distinct characters?
+ * What are the quests that are most often completed and by how many distinct characters?
  * Order by the times it's been completed, the disctinct character count, and the type of quest.
  */
 SELECT questid, type, count(*) timescompleted, experience, gold, characterCount
-    FROM bi_quest_log biql
-    JOIN quests USING (questid)
-    JOIN (
-        SELECT questid, count(distinct characterid) as characterCount
-        FROM bi_quest_log
-        WHERE duration IS NOT NULL GROUP BY questid
-    ) cc USING (questid)
+FROM fact_quest_log fql
+JOIN quests USING (questid)
+JOIN (
+    SELECT questid, count(distinct characterid) as characterCount
+    FROM fact_quest_log
     WHERE duration IS NOT NULL GROUP BY questid
-    ORDER BY timescompleted DESC, charactercount DESC, type ASC;
+) cc USING (questid)
+WHERE duration IS NOT NULL GROUP BY questid
+ORDER BY timescompleted DESC, charactercount DESC, type ASC;
 
 /**
  * Question 2:
  * What are the most popular types of quests for characters that have at least 1000 gold?
  */
 SELECT q.type, q.questid, count(*) timescompleted
-FROM bi_quest_log ql
+FROM fact_quest_log ql
 JOIN quests q USING (questid)
-JOIN characters c USING (characterid) WHERE c.gold > 1000
+JOIN fact_characters fc USING (characterid) WHERE fc.gold > 1000
 GROUP BY q.type, q.questid WITH ROLLUP;
  
  /**
@@ -84,36 +85,23 @@ GROUP BY q.type, q.questid WITH ROLLUP;
   * What time of the year are users more likely to play the game?
   */
  SELECT tl1.quartertext as acquired, tl1.monthtext as month_acquired, tl2.quartertext as completed, count(*) as questcount, questid
- FROM bi_quest_log biql
- JOIN timeline tl1 ON biql.in_timeid = tl1.timeid
- JOIN timeline tl2 ON biql.done_timeid = tl2.timeid
- WHERE biql.duration IS NOT NULL
+ FROM fact_quest_log fql
+ JOIN timeline tl1 ON fql.in_timeid = tl1.timeid
+ JOIN timeline tl2 ON fql.done_timeid = tl2.timeid
+ WHERE fql.duration IS NOT NULL
  GROUP BY tl1.quartertext, tl1.monthtext, tl2.quartertext WITH ROLLUP;
  
 /**
  * Question 4:
  * What are the quests that have paid the most amount of gold?
  */
- SELECT questid, gold FROM gamedbdw.quests ORDER BY gold DESC;
- 
- 
+SELECT q.questid, q.type, q.gold, sum(q.gold) as totalawarded, count(*) payoutcount
+FROM quests q
+JOIN fact_quest_log USING (questid)
+GROUP BY q.questid ORDER BY totalawarded;
+
  /**
   * Question 5:
   * What are the most popular items broken by total quantity sold, and gold value per unit and total?
   * What is the average level of the characters purchasing those items?
   */
-    
- SELECT bi.characterid, bi.quantity, bi.itemid, COUNT(*) assests, gold, AVG(level)
-	FROM bi_inventory bi 
-    JOIN characters c USING (characterid);
-    
- 
- 
- 
- 
- 
- 
- 
- 
-  
-  
